@@ -1,5 +1,13 @@
 from flask import Flask,render_template,redirect,url_for,request,flash
 from forms import RegistrationForm,LoginForm
+import mysql.connector as sq
+db=sq.connect(
+    host="localhost",
+    user="root",
+    passwd="Nasamud@yahoopee5216",
+    database="flask"
+)
+mycur=db.cursor()
 
 
 app=Flask(__name__)
@@ -36,6 +44,8 @@ def about():
 def register():
     form=RegistrationForm()
     if form.validate_on_submit():
+        mycur.execute(f"INSERT INTO reg(user,email,pass) VALUES('{form.username.data}','{form.email.data}','{form.password.data}')")
+        db.commit()
         flash(f'Account created for {form.username.data}!','success')
         return redirect(url_for('home'))
         
@@ -48,7 +58,8 @@ def register():
 def login():
     form=LoginForm()
     if form.validate_on_submit():
-        if form.email.data=='yawarmushtaq52@gmail.com' and form.password.data=='12345':
+        mycur.execute(f"SELECT pass FROM reg WHERE email='{form.email.data}'")
+        if form.password.data==mycur.fetchone()[0]:
             flash('Login Successful','success')
             return redirect(url_for('home'))
         else:
