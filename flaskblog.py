@@ -44,13 +44,26 @@ def about():
 def register():
     form=RegistrationForm()
     if form.validate_on_submit():
-        mycur.execute(f"INSERT INTO reg(user,email,pass) VALUES('{form.username.data}','{form.email.data}','{form.password.data}')")
-        db.commit()
-        flash(f'Account created for {form.username.data}!','success')
-        return redirect(url_for('home'))
-        
+        mycur.execute("SELECT user,email FROM reg")
+        result=mycur.fetchall()
+        listnames=[]
+        listemails=[]
+        for i in result:
+            listnames.append(i[0])
+            listemails.append(i[1])
+        if not(form.username.data in listnames):
+            if not(form.email.data in listemails):
+                mycur.execute(f"INSERT INTO reg(user,email,pass) VALUES('{form.username.data}','{form.email.data}','{form.password.data}')")
+                db.commit()
+                flash(f'Account created for {form.username.data}!','success')
+                return redirect(url_for('home'))
+            else:
+                flash("Account with that email already exists!",'danger')
+        else:
+            flash("Username taken,try a diffrent one",'danger')
+        return render_template('register.htm',
+                            form=form,title='Register')
     else:
-        
         return render_template('register.htm',
                             form=form,title='Register')
 
@@ -59,11 +72,15 @@ def login():
     form=LoginForm()
     if form.validate_on_submit():
         mycur.execute(f"SELECT pass FROM reg WHERE email='{form.email.data}'")
-        if form.password.data==mycur.fetchone()[0]:
-            flash('Login Successful','success')
-            return redirect(url_for('home'))
+        result=mycur.fetchone()
+        if result:
+            if form.password.data==result[0]:
+                flash('Login Successful','success')
+                return redirect(url_for('home'))
+            else:
+                flash('Login unsuccessful,please check your email and/or password','danger')
         else:
-            flash('Login unsuccessful,please check your email and/or password','danger')
+             flash('Account does not exist','danger')            
     return render_template('login.htm',title='Login',form=form)
      
 
