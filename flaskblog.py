@@ -29,7 +29,6 @@ posts=[
 ]
 
 
-@app.route("/")
 @app.route("/home")
 def home():
     return render_template("home.htm",title="home",posts=posts) 
@@ -55,6 +54,7 @@ def register():
             if not(form.email.data in listemails):
                 mycur.execute(f"INSERT INTO reg(user,email,pass) VALUES('{form.username.data}','{form.email.data}','{form.password.data}')")
                 db.commit()
+                mycur.execute(f"CREATE TABLE table_{form.username.data}(blog LONGTEXT)")
                 flash(f'Account created for {form.username.data}!','success')
                 return redirect(url_for('home'))
             else:
@@ -66,12 +66,12 @@ def register():
     else:
         return render_template('register.htm',
                             form=form,title='Register')
-
+@app.route("/")
 @app.route('/login',methods=['POST','GET'])
 def login():
     form=LoginForm()
     if form.validate_on_submit():
-        mycur.execute(f"SELECT pass FROM reg WHERE email='{form.email.data}'")
+        mycur.execute(f"SELECT pass FROM reg WHERE user='{form.username.data}'")
         result=mycur.fetchone()
         if result:
             if form.password.data==result[0]:
