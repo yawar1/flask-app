@@ -29,9 +29,20 @@ posts=[
 ]
 
 
-@app.route("/home")
-def home():
-    return render_template("home.htm",title="home",posts=posts) 
+def home(author):
+    mycur.execute("SELECT user FROM reg")
+    result=mycur.fetchall()
+    listnames=[]
+    ListContent=[]
+    for i in result:
+        listnames.append(i[0])
+    listnames.remove(author)
+    for j in listnames:
+        mycur.execute(f"SELECT blog from table_{j}")
+        result1=mycur.fetchall()
+        for k in result1:
+            ListContent.append(k[0])
+    return render_template("home.htm",title="home",posts=ListContent) 
 
 @app.route('/about')
 def about():
@@ -56,7 +67,7 @@ def register():
                 db.commit()
                 mycur.execute(f"CREATE TABLE table_{form.username.data}(blog LONGTEXT)")
                 flash(f'Account created for {form.username.data}!','success')
-                return redirect(url_for('home'))
+                return home(form.username.data)
             else:
                 flash("Account with that email already exists!",'danger')
         else:
@@ -76,7 +87,7 @@ def login():
         if result:
             if form.password.data==result[0]:
                 flash('Login Successful','success')
-                return redirect(url_for('home'))
+                return home(form.username.data)
             else:
                 flash('Login unsuccessful,please check your email and/or password','danger')
         else:
