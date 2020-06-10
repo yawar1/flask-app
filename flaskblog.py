@@ -1,5 +1,5 @@
 from flask import Flask,render_template,redirect,url_for,request,flash
-from forms import RegistrationForm,LoginForm
+from forms import RegistrationForm,LoginForm,PostForm
 import mysql.connector as sq
 db=sq.connect(
     host="localhost",
@@ -44,25 +44,25 @@ def home(author):
             ListContent.append(k[0])
     return render_template("home.htm",title="home",posts=ListContent) 
 
-@app.route('/about')
+@app.route('/about',methods=['GET','POST'])
 def about():
-    
-    return render_template('about.htm',
-                          title="about")
+    form=PostForm()
+    if form.validate_on_submit():
+        return redirect(url_for("login"))
+    else:
+        return render_template('about.htm',
+                            title="about",form=form)
 
 @app.route("/register",methods=['GET','POST'])
 def register():
     form=RegistrationForm()
     if form.validate_on_submit():
-        mycur.execute("SELECT user,email FROM reg")
-        result=mycur.fetchall()
-        listnames=[]
-        listemails=[]
-        for i in result:
-            listnames.append(i[0])
-            listemails.append(i[1])
-        if not(form.username.data in listnames):
-            if not(form.email.data in listemails):
+        mycur.execute(f"SELECT * FROM reg WHERE user='{form.username.data}' ")
+        result_pw=mycur.fetchone()
+        mycur.execute(f"SELECT * FROM reg WHERE email='{form.email.data}' ")
+        result_email=mycur.fetchone()
+        if not(result_pw):
+            if not(result_email):
                 mycur.execute(f"INSERT INTO reg(user,email,pass) VALUES('{form.username.data}','{form.email.data}','{form.password.data}')")
                 db.commit()
                 mycur.execute(f"CREATE TABLE table_{form.username.data}(blog LONGTEXT)")
