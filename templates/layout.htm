@@ -28,13 +28,19 @@
                 </button>
                 <div class="collapse navbar-collapse" id="navbarToggle">
                     <div class="navbar-nav mr-auto">
-                        <a class="nav-item nav-link" href="/">Home</a>
-                        <a class="nav-item nav-link" href="/about">Write</a>
+                        {% if session %}
+                        <a class="nav-item nav-link" href="/write">Write</a>
+                        {%endif%}
+
                     </div>
                     <!-- Navbar Right Side -->
                     <div class="navbar-nav">
+                        {% if not(session) %}
                         <a class="nav-item nav-link" href="/login">Login</a>
                         <a class="nav-item nav-link" href="/register">Register</a>
+                        {% else %}
+                        <a class="nav-item nav-link" href="/logout">Log-Out</a>
+                        {%endif%}
                     </div>
                 </div>
             </div>
@@ -47,7 +53,7 @@
                     {% if messages %}
                         {% for category,messages in messages %}
                             <div class="alert alert-{{ category }}">
-                                {{ messages }}    
+                                {{ messages }} <a href="/">  CLOSE  </a>
                             </div>  
                             {% endfor %}
                     {% endif %}
