@@ -16,6 +16,6 @@ class LoginForm(FlaskForm):
     submit=SubmitField('Login')
 
 class PostForm(FlaskForm):
-    title = StringField('Title', validators=[DataRequired()])
+    title = StringField('Title', validators=[DataRequired(),Length(max=30)])
     Text= TextAreaField('EVERY SPACE IS BATTLE OF IDEOLOGIES,SO WRITE!', render_kw={"rows": 10, "cols": 10},validators=[DataRequired()])
     submit=SubmitField('Done')

@@ -39,7 +39,7 @@
                         <a class="nav-item nav-link" href="/login">Login</a>
                         <a class="nav-item nav-link" href="/register">Register</a>
                         {% else %}
-                        <a class="nav-item nav-link" href="/logout">Log-Out</a>
+                        <a class="nav-item nav-link" href="/logout">Log-Out({{session['user']}})</a>
                         {%endif%}
                     </div>
                 </div>

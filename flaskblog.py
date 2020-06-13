@@ -1,6 +1,7 @@
 from flask import Flask,render_template,redirect,url_for,request,flash
 from forms import RegistrationForm,LoginForm,PostForm
 import mysql.connector as sq
+import re
 db=sq.connect(
     host="localhost",
     user="root",
@@ -30,7 +31,7 @@ posts=[
 
 
 def home(author):
-    mycur.execute("SELECT user FROM reg")
+    mycur.execute("""SELECT user FROM reg""")
     result=mycur.fetchall()
     listnames=[]
     ListContent=[]
@@ -38,10 +39,10 @@ def home(author):
         listnames.append(i[0])
     listnames.remove(author)
     for j in listnames:
-        mycur.execute(f"SELECT blog from table_{j}")
+        mycur.execute(f"""SELECT blog,title from `table_{j}`""")
         result1=mycur.fetchall()
         for k in result1:
-            ListContent.append(k[0])
+            ListContent.append([k[0],k[1],j])
     return render_template("home.htm",title="home",posts=ListContent,session=session_) 
 
 @app.route('/write',methods=['GET','POST'])
@@ -50,7 +51,9 @@ def write():
         return redirect(url_for('login'))
     form=PostForm()
     if form.validate_on_submit():
-        return redirect(url_for("login"))
+        mycur.execute(f"""INSERT INTO `table_{session_['user']}`(title,blog) VALUES("{form.title.data}","{form.Text.data}")""")
+        db.commit()
+        return home(session_['user'])
     else:
         return render_template('write.htm',
                             title="write",form=form,session=session_)
@@ -61,21 +64,32 @@ def register():
         return home(session_['user'])
     form=RegistrationForm()
     if form.validate_on_submit():
-        mycur.execute(f"SELECT * FROM reg WHERE user='{form.username.data}' ")
-        result_pw=mycur.fetchone()
-        mycur.execute(f"SELECT * FROM reg WHERE email='{form.email.data}' ")
-        result_email=mycur.fetchone()
-        if not(result_pw):
-            if not(result_email):
-                mycur.execute(f"INSERT INTO reg(user,email,pass) VALUES('{form.username.data}','{form.email.data}','{form.password.data}')")
-                db.commit()
-                mycur.execute(f"CREATE TABLE table_{form.username.data}(blog LONGTEXT)")
-                flash(f'Account created for {form.username.data}!','success')
-                return home(form.username.data)
+        flag=True
+        p=re.compile('\W')
+        result_reg=p.findall(form.username.data)
+        for i in form.email.data:
+            if ord(i)==34:
+                flag=False
+        if not(result_reg):
+            mycur.execute(f'SELECT * FROM reg WHERE user="{form.username.data}" ')
+            result_pw=mycur.fetchone()
+            mycur.execute(f'SELECT * FROM reg WHERE email="{form.email.data}" ')
+            result_email=mycur.fetchone()
+            if not(result_pw):
+                if (not(result_email) and flag):
+                    mycur.execute(f"""INSERT INTO reg(user,email,pass) VALUES("{form.username.data}","{form.email.data}","{form.password.data}")""")
+                    db.commit()
+
+                    mycur.execute(f"""CREATE TABLE `table_{form.username.data}`(title VARCHAR(40),blog LONGTEXT)""")
+
+                    flash(f"""Account created for {form.username.data}!""",'success')
+                    return home(form.username.data)
+                else:
+                    flash("Account with that email already exists!",'danger')
             else:
-                flash("Account with that email already exists!",'danger')
+                flash("Username taken,try a diffrent one",'danger')
         else:
-            flash("Username taken,try a diffrent one",'danger')
+            flash("""Please use Alpha-numeric[a-z,A-Z,0-9] characters only!""",'danger')
         return render_template('register.htm',
                             form=form,title='Register',session=session_)
     else:
@@ -88,17 +102,22 @@ def login():
         return home(session_['user'])
     form=LoginForm()
     if form.validate_on_submit():
-        mycur.execute(f"SELECT pass FROM reg WHERE user='{form.username.data}'")
-        result=mycur.fetchone()
-        if result:
-            if form.password.data==result[0]:
-                session_['user']=form.username.data
-                flash('Login Successful','success')
-                return home(form.username.data)
+        p=re.compile('\W')
+        result_reg=p.findall(form.username.data)
+        if not(result_reg):
+            mycur.execute(f"""SELECT pass FROM reg WHERE user="{form.username.data}" """)
+            result=mycur.fetchone()
+            if result:
+                if form.password.data==result[0]:
+                    session_['user']=form.username.data
+                    flash('Login Successful','success')
+                    return home(form.username.data)
+                else:
+                    flash('Login unsuccessful,please check your password','danger')
             else:
-                flash('Login unsuccessful,please check your password','danger')
+                flash('Account does not exist','danger')  
         else:
-             flash('Account does not exist','danger')            
+            flash('Account does not exist','danger')
     return render_template('login.htm',title='Login',form=form,session=session_)
 
 @app.route('/logout')
