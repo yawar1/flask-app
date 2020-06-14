@@ -28,14 +28,14 @@
                 </button>
                 <div class="collapse navbar-collapse" id="navbarToggle">
                     <div class="navbar-nav mr-auto">
-                        {% if session %}
+                        {% if session.get('user') %}
                         <a class="nav-item nav-link" href="/write">Write</a>
                         {%endif%}
 
                     </div>
                     <!-- Navbar Right Side -->
                     <div class="navbar-nav">
-                        {% if not(session) %}
+                        {% if not(session.get('user')) %}
                         <a class="nav-item nav-link" href="/login">Login</a>
                         <a class="nav-item nav-link" href="/register">Register</a>
                         {% else %}

@@ -1,4 +1,4 @@
-from flask import Flask,render_template,redirect,url_for,request,flash
+from flask import Flask,render_template,redirect,url_for,request,flash,session
 from forms import RegistrationForm,LoginForm,PostForm
 import mysql.connector as sq
 import re
@@ -9,7 +9,6 @@ db=sq.connect(
     database="flask"
 )
 mycur=db.cursor()
-session_={}
 
 app=Flask(__name__)
 app.config['SECRET_KEY']='fwehdfaisuhfu'
@@ -43,25 +42,25 @@ def home(author):
         result1=mycur.fetchall()
         for k in result1:
             ListContent.append([k[0],k[1],j])
-    return render_template("home.htm",title="home",posts=ListContent,session=session_) 
+    return render_template("home.htm",title="home",posts=ListContent) 
 
 @app.route('/write',methods=['GET','POST'])
 def write():
-    if not(session_):
+    if not(session.get('user')):
         return redirect(url_for('login'))
     form=PostForm()
     if form.validate_on_submit():
-        mycur.execute(f"""INSERT INTO `table_{session_['user']}`(title,blog) VALUES("{form.title.data}","{form.Text.data}")""")
+        mycur.execute(f"""INSERT INTO `table_{session['user']}`(title,blog) VALUES("{form.title.data}","{form.Text.data}")""")
         db.commit()
-        return home(session_['user'])
+        return home(session.get('user'))
     else:
         return render_template('write.htm',
-                            title="write",form=form,session=session_)
+                            title="write",form=form)
 
 @app.route("/register",methods=['GET','POST'])
 def register():
-    if session_:
-        return home(session_['user'])
+    if session.get('user'):
+        return home(session.get('user'))
     form=RegistrationForm()
     if form.validate_on_submit():
         flag=True
@@ -91,15 +90,15 @@ def register():
         else:
             flash("""Please use Alpha-numeric[a-z,A-Z,0-9] characters only!""",'danger')
         return render_template('register.htm',
-                            form=form,title='Register',session=session_)
+                            form=form,title='Register')
     else:
         return render_template('register.htm',
-                            form=form,title='Register',session=session_)
+                            form=form,title='Register')
 @app.route("/")
 @app.route('/login',methods=['POST','GET'])
 def login():
-    if session_:
-        return home(session_['user'])
+    if session.get('user'):
+        return home(session.get('user'))
     form=LoginForm()
     if form.validate_on_submit():
         p=re.compile('\W')
@@ -109,7 +108,7 @@ def login():
             result=mycur.fetchone()
             if result:
                 if form.password.data==result[0]:
-                    session_['user']=form.username.data
+                    session['user']=form.username.data
                     flash('Login Successful','success')
                     return home(form.username.data)
                 else:
@@ -118,11 +117,11 @@ def login():
                 flash('Account does not exist','danger')  
         else:
             flash('Account does not exist','danger')
-    return render_template('login.htm',title='Login',form=form,session=session_)
+    return render_template('login.htm',title='Login',form=form)
 
 @app.route('/logout')
 def logout():
-    session_.clear()
+    session.pop('user',None)
     return redirect(url_for('login'))
      
 
