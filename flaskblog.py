@@ -28,21 +28,14 @@ posts=[
     }
 ]
 
-
-def home(author):
-    mycur.execute("""SELECT user FROM reg""")
-    result=mycur.fetchall()
-    listnames=[]
-    ListContent=[]
-    for i in result:
-        listnames.append(i[0])
-    listnames.remove(author)
-    for j in listnames:
-        mycur.execute(f"""SELECT blog,title from `table_{j}`""")
-        result1=mycur.fetchall()
-        for k in result1:
-            ListContent.append([k[0],k[1],j])
-    return render_template("home.htm",title="home",posts=ListContent) 
+@app.route('/home')
+def home():
+    if not(session.get('user')):
+        return redirect(url_for('login'))
+    author=session.get('user')
+    mycur.execute(f""" SELECT title,content,author,date_ FROM posts WHERE author <> '{author}' ORDER BY date_ DESC """)
+    posts=mycur.fetchall()
+    return render_template("home.htm",title="home",posts=posts) 
 
 @app.route('/write',methods=['GET','POST'])
 def write():
@@ -50,9 +43,12 @@ def write():
         return redirect(url_for('login'))
     form=PostForm()
     if form.validate_on_submit():
-        mycur.execute(f"""INSERT INTO `table_{session['user']}`(title,blog) VALUES("{form.title.data}","{form.Text.data}")""")
+        import datetime
+        now = datetime.datetime.now().strftime("%Y-%m-%d")
+        mycur.execute(f"""INSERT INTO posts(title,content,author,date_)
+        VALUES("{form.title.data}","{form.Text.data}","{session.get('user')}",'{now}')""")
         db.commit()
-        return home(session.get('user'))
+        return home()
     else:
         return render_template('write.htm',
                             title="write",form=form)
@@ -60,7 +56,7 @@ def write():
 @app.route("/register",methods=['GET','POST'])
 def register():
     if session.get('user'):
-        return home(session.get('user'))
+        return home()
     form=RegistrationForm()
     if form.validate_on_submit():
         flag=True
@@ -76,13 +72,13 @@ def register():
             result_email=mycur.fetchone()
             if not(result_pw):
                 if (not(result_email) and flag):
-                    mycur.execute(f"""INSERT INTO reg(user,email,pass) VALUES("{form.username.data}","{form.email.data}","{form.password.data}")""")
+                    mycur.execute(f"""INSERT INTO reg(user,email,pass)
+                    VALUES("{form.username.data}","{form.email.data}","{form.password.data}")""")
                     db.commit()
 
-                    mycur.execute(f"""CREATE TABLE `table_{form.username.data}`(title VARCHAR(40),blog LONGTEXT)""")
-
                     flash(f"""Account created for {form.username.data}!""",'success')
-                    return home(form.username.data)
+                    session['user']=form.username.data
+                    return home()
                 else:
                     flash("Account with that email already exists!",'danger')
             else:
@@ -98,7 +94,7 @@ def register():
 @app.route('/login',methods=['POST','GET'])
 def login():
     if session.get('user'):
-        return home(session.get('user'))
+        return home()
     form=LoginForm()
     if form.validate_on_submit():
         p=re.compile('\W')
@@ -110,7 +106,7 @@ def login():
                 if form.password.data==result[0]:
                     session['user']=form.username.data
                     flash('Login Successful','success')
-                    return home(form.username.data)
+                    return home()
                 else:
                     flash('Login unsuccessful,please check your password','danger')
             else:
@@ -123,6 +119,13 @@ def login():
 def logout():
     session.pop('user',None)
     return redirect(url_for('login'))
+@app.route("/account")
+def account():
+    if not(session.get('user')):
+        return redirect(url_for('login'))
+    mycur.execute(f""" SELECT email FROM reg WHERE user= "{session.get('user')}" """)
+    email=mycur.fetchone()[0]
+    return render_template('account.htm',email=email)
      
 
 if __name__=='__main__':

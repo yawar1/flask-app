@@ -1,0 +1,15 @@
+{%extends 'layout.htm'%}
+{%block content%}
+
+<div class="content-section">
+    <div class="media">
+      <img class="rounded-circle account-img" src="static\profile_pics\default.jpg">
+      <div class="media-body">
+        <h2 class="account-heading">{{session.get('user')}}</h2>
+        <p class="text-secondary">{{email}}</p>
+      </div>
+    </div>
+    <!-- FORM HERE -->
+  </div>
+
+  {% endblock %}

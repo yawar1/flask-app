@@ -30,6 +30,11 @@
                     <div class="navbar-nav mr-auto">
                         {% if session.get('user') %}
                         <a class="nav-item nav-link" href="/write">Write</a>
+                        <a class="nav-item nav-link" href="/home">Home</a>
+                        <a class="nav-item nav-link" href="/account">Profile</a>
+                        {%else%}
+                        <a class="nav-item nav-link" href="/write">Write</a>
+                        <a class="nav-item nav-link" href="/home">Home</a>
                         {%endif%}
 
                     </div>
