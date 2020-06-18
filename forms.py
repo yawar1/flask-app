@@ -6,7 +6,7 @@ from wtforms.validators import Length,Email,EqualTo,DataRequired
 class RegistrationForm(FlaskForm):
     username=StringField('Username',validators=[DataRequired(),Length(min=3,max=20)])
     email=StringField('Email',validators=[DataRequired(),Email()])
-    password=PasswordField('Password',validators=[DataRequired()])
+    password=PasswordField('Password',validators=[DataRequired(),Length(min=3,max=20)])
     confirm_password=PasswordField('Confirm Password',validators=[DataRequired(),EqualTo('password')])
     submit=SubmitField('Signup')
 
@@ -19,3 +19,9 @@ class PostForm(FlaskForm):
     title = StringField('Title', validators=[DataRequired(),Length(max=30)])
     Text= TextAreaField('EVERY SPACE IS BATTLE OF IDEOLOGIES,SO WRITE!', render_kw={"rows": 10, "cols": 10},validators=[DataRequired()])
     submit=SubmitField('Done')
+
+class UpdateForm(FlaskForm):
+    username=StringField('Change Username',validators=[DataRequired(),Length(min=3,max=20)])
+    email=StringField('Change Email',validators=[DataRequired(),Email()])
+    submit=SubmitField('Change')
+

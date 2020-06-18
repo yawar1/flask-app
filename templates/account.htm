@@ -2,14 +2,66 @@
 {%block content%}
 
 <div class="content-section">
-    <div class="media">
-      <img class="rounded-circle account-img" src="static\profile_pics\default.jpg">
-      <div class="media-body">
-        <h2 class="account-heading">{{session.get('user')}}</h2>
-        <p class="text-secondary">{{email}}</p>
-      </div>
+  <div class="media">
+    <img class="rounded-circle account-img" src="{{url_for('static',filename='profile_pics/'+'default.jpg')}}">
+    <div class="media-body">
+      <h2 class="account-heading">{{session.get('user')}}</h2>
+      <p class="text-secondary">{{email}}</p>
     </div>
-    <!-- FORM HERE -->
+  </div>
+  <!-- FORM HERE -->
+
+  <div class="content-section">
+    <form action="/account" method="POST">
+      {{ form.hidden_tag() }}
+
+
+      <fieldset class="form-group"></fieldset>
+
+
+      <div class="form-group">
+        {{ form.username.label(class="form-control-label") }}
+
+
+        {% if form.username.errors %}
+        {{ form.username(class="form-control-lg is-invalid")}}
+        <div class="invalid-feedback">
+          {% for error in form.username.errors %}
+          <span> {{ error }} </span>
+          {% endfor %}
+        </div>
+        {% else %}
+        {{ form.username(class="form-control form-control-lg") }}
+        {% endif %}
+
+
+      </div>
+
+      <div class="form-group">
+        {{ form.email.label(class="form-control-label") }}
+
+
+        {% if form.email.errors %}
+        {{ form.email(class="form-control-lg is-invalid")}}
+        <div class="invalid-feedback">
+          {% for error in form.email.errors %}
+          <span> {{ error }} </span>
+          {% endfor %}
+        </div>
+        {% else %}
+        {{ form.email(class="form-control form-control-lg") }}
+        {% endif %}
+
+
+      </div>
+
+      <div class="form-group">
+        {{ form.submit(class="btn btn-outline-info ") }}
+      </div>
+    </form>
   </div>
 
-  {% endblock %}
+  <!--to here-->
+</div>
+
+{% endblock %}

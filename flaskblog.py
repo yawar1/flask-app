@@ -1,7 +1,11 @@
 from flask import Flask,render_template,redirect,url_for,request,flash,session
-from forms import RegistrationForm,LoginForm,PostForm
+from forms import RegistrationForm,LoginForm,PostForm,UpdateForm
 import mysql.connector as sq
 import re
+import datetime
+from flask_bcrypt import Bcrypt
+
+
 db=sq.connect(
     host="localhost",
     user="root",
@@ -11,31 +15,18 @@ db=sq.connect(
 mycur=db.cursor()
 
 app=Flask(__name__)
-app.config['SECRET_KEY']='fwehdfaisuhfu'
+app.config['SECRET_KEY']='27850d1f47f1aef5a288f142'
+crypt=Bcrypt(app)
 
-posts=[
-    {
-        'author':'Corey Schafer',
-        'title':'Blog post 1',
-        'content':'First post content',
-        'date_posted':'April 20,2018'
-    },
-    {
-        'author':'Jane Doe',
-        'title':'Blog post 2',
-        'content':'Second post content',
-        'date_posted':'April 21,2018'
-    }
-]
 
 @app.route('/home')
 def home():
     if not(session.get('user')):
         return redirect(url_for('login'))
     author=session.get('user')
-    mycur.execute(f""" SELECT title,content,author,date_ FROM posts WHERE author <> '{author}' ORDER BY date_ DESC """)
+    mycur.execute(f""" SELECT title,content,author,date_ FROM posts WHERE author <> %s ORDER BY date_ DESC """,(author,))
     posts=mycur.fetchall()
-    return render_template("home.htm",title="home",posts=posts) 
+    return render_template("home.htm",title="home",posts=posts,current_add='home') 
 
 @app.route('/write',methods=['GET','POST'])
 def write():
@@ -43,15 +34,15 @@ def write():
         return redirect(url_for('login'))
     form=PostForm()
     if form.validate_on_submit():
-        import datetime
         now = datetime.datetime.now().strftime("%Y-%m-%d")
+      
         mycur.execute(f"""INSERT INTO posts(title,content,author,date_)
-        VALUES("{form.title.data}","{form.Text.data}","{session.get('user')}",'{now}')""")
+        VALUES(%s,%s,%s,%s)""",(form.title.data,form.Text.data,session.get('user'),now))
         db.commit()
-        return home()
-    else:
-        return render_template('write.htm',
-                            title="write",form=form)
+        flash('Post created,cool!','success')
+
+    return render_template('write.htm',
+                            title="write",form=form,current_add='write')
 
 @app.route("/register",methods=['GET','POST'])
 def register():
@@ -59,37 +50,26 @@ def register():
         return home()
     form=RegistrationForm()
     if form.validate_on_submit():
-        flag=True
-        p=re.compile('\W')
-        result_reg=p.findall(form.username.data)
-        for i in form.email.data:
-            if ord(i)==34:
-                flag=False
-        if not(result_reg):
-            mycur.execute(f'SELECT * FROM reg WHERE user="{form.username.data}" ')
-            result_pw=mycur.fetchone()
-            mycur.execute(f'SELECT * FROM reg WHERE email="{form.email.data}" ')
-            result_email=mycur.fetchone()
-            if not(result_pw):
-                if (not(result_email) and flag):
-                    mycur.execute(f"""INSERT INTO reg(user,email,pass)
-                    VALUES("{form.username.data}","{form.email.data}","{form.password.data}")""")
-                    db.commit()
-
-                    flash(f"""Account created for {form.username.data}!""",'success')
-                    session['user']=form.username.data
-                    return home()
-                else:
-                    flash("Account with that email already exists!",'danger')
+    
+        mycur.execute(f'SELECT * FROM reg WHERE user= %s ',(form.username.data,))
+        result_pw=mycur.fetchone()
+        mycur.execute(f'SELECT * FROM reg WHERE email=%s ',(form.email.data,))
+        result_email=mycur.fetchone()
+        if not(result_pw):
+            if not(result_email):
+                password=crypt.generate_password_hash(form.password.data).decode('utf-8')
+                mycur.execute(f"""INSERT INTO reg(user,email,pass)
+                VALUES(%s,%s,%s)""",(form.username.data,form.email.data,password))
+                db.commit()
+                flash(f"""Account created for {form.username.data}!""",'success')
+                session['user']=form.username.data
+                return home()
             else:
-                flash("Username taken,try a diffrent one",'danger')
+                flash("Account with that email already exists!",'danger')
         else:
-            flash("""Please use Alpha-numeric[a-z,A-Z,0-9] characters only!""",'danger')
-        return render_template('register.htm',
-                            form=form,title='Register')
-    else:
-        return render_template('register.htm',
-                            form=form,title='Register')
+            flash("Username taken,try a diffrent one",'danger')
+    return render_template('register.htm',
+                            form=form,title='Register',current_add='register')
 @app.route("/")
 @app.route('/login',methods=['POST','GET'])
 def login():
@@ -97,35 +77,52 @@ def login():
         return home()
     form=LoginForm()
     if form.validate_on_submit():
-        p=re.compile('\W')
-        result_reg=p.findall(form.username.data)
-        if not(result_reg):
-            mycur.execute(f"""SELECT pass FROM reg WHERE user="{form.username.data}" """)
-            result=mycur.fetchone()
-            if result:
-                if form.password.data==result[0]:
-                    session['user']=form.username.data
-                    flash('Login Successful','success')
-                    return home()
-                else:
-                    flash('Login unsuccessful,please check your password','danger')
+    
+        mycur.execute(f"""SELECT pass FROM reg WHERE user=%s """,(form.username.data,))
+        result=mycur.fetchone()
+        if result:
+            if crypt.check_password_hash(result[0],form.password.data):
+                session['user']=form.username.data
+                flash('Login Successful','success')
+                return home()
             else:
-                flash('Account does not exist','danger')  
+                flash('Login unsuccessful,please check your password','danger')
         else:
-            flash('Account does not exist','danger')
-    return render_template('login.htm',title='Login',form=form)
+            flash('Account does not exist','danger')  
+    return render_template('login.htm',title='Login',form=form,current_add='login')
 
 @app.route('/logout')
 def logout():
     session.pop('user',None)
     return redirect(url_for('login'))
-@app.route("/account")
+@app.route("/account",methods=['POST','GET'])
 def account():
     if not(session.get('user')):
         return redirect(url_for('login'))
-    mycur.execute(f""" SELECT email FROM reg WHERE user= "{session.get('user')}" """)
+    form=UpdateForm()
+    if form.validate_on_submit():
+        mycur.execute(f'SELECT * FROM reg WHERE user= %s ',(form.username.data,))
+        result_user=mycur.fetchone()
+        mycur.execute(f'SELECT * FROM reg WHERE email=%s ',(form.email.data,))
+        result_email=mycur.fetchone()
+        if not(result_user):
+            if not(result_email):
+                mycur.execute(""" SET FOREIGN_KEY_CHECKS =0 """ )
+                mycur.execute(""" UPDATE reg SET email = %s WHERE user = %s """,(form.email.data,session.get('user')))
+                mycur.execute(""" UPDATE reg SET user = %s WHERE user = %s """,(form.username.data,session.get('user')))
+                mycur.execute(""" UPDATE posts SET author = %s WHERE author = %s """,(form.username.data,session.get('user')))
+                db.commit()
+                mycur.execute(""" SET FOREIGN_KEY_CHECKS =1 """ )
+                session['user']=form.username.data
+                flash('Username changed Successfully','success')
+            else:
+                flash("Account with that email already exists!",'danger')
+        else:
+            flash("Username taken,try a diffrent one",'danger')
+            
+    mycur.execute(f""" SELECT email FROM reg WHERE user= %s """,(session.get('user'),))
     email=mycur.fetchone()[0]
-    return render_template('account.htm',email=email)
+    return render_template('account.htm',email=email,form=form,current_add='account')
      
 
 if __name__=='__main__':
