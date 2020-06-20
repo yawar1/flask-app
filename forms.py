@@ -1,6 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField,PasswordField,SubmitField,TextAreaField
 from wtforms.validators import Length,Email,EqualTo,DataRequired
+from flask_wtf.file import FileField,FileAllowed,FileRequired
 
 
 class RegistrationForm(FlaskForm):
@@ -18,10 +19,11 @@ class LoginForm(FlaskForm):
 class PostForm(FlaskForm):
     title = StringField('Title', validators=[DataRequired(),Length(max=30)])
     Text= TextAreaField('EVERY SPACE IS BATTLE OF IDEOLOGIES,SO WRITE!', render_kw={"rows": 10, "cols": 10},validators=[DataRequired()])
-    submit=SubmitField('Done')
+    submit=SubmitField('Post')
 
 class UpdateForm(FlaskForm):
-    username=StringField('Change Username',validators=[DataRequired(),Length(min=3,max=20)])
-    email=StringField('Change Email',validators=[DataRequired(),Email()])
+    username=StringField('Change Username',validators=[Length(min=3,max=20)])
+    email=StringField('Change Email',validators=[Email()])
+    dp=FileField('Change Profile Pic',validators=[FileRequired(),FileAllowed(['jpg','png'])])
     submit=SubmitField('Change')
 

@@ -4,6 +4,8 @@ import mysql.connector as sq
 import re
 import datetime
 from flask_bcrypt import Bcrypt
+import secrets
+import os
 
 
 db=sq.connect(
@@ -107,22 +109,44 @@ def account():
         result_email=mycur.fetchone()
         if not(result_user):
             if not(result_email):
-                mycur.execute(""" SET FOREIGN_KEY_CHECKS =0 """ )
-                mycur.execute(""" UPDATE reg SET email = %s WHERE user = %s """,(form.email.data,session.get('user')))
-                mycur.execute(""" UPDATE reg SET user = %s WHERE user = %s """,(form.username.data,session.get('user')))
-                mycur.execute(""" UPDATE posts SET author = %s WHERE author = %s """,(form.username.data,session.get('user')))
-                db.commit()
-                mycur.execute(""" SET FOREIGN_KEY_CHECKS =1 """ )
-                session['user']=form.username.data
-                flash('Username changed Successfully','success')
+                
+                if form.email.data:
+                    mycur.execute(""" UPDATE reg SET email = %s WHERE user = %s """,(form.email.data,session.get('user')))
+                    db.commit()
+                if form.username.data:
+                    mycur.execute(""" SET FOREIGN_KEY_CHECKS =0 """ )
+                    mycur.execute(""" UPDATE reg SET user = %s WHERE user = %s """,(form.username.data,session.get('user')))
+                    mycur.execute(""" UPDATE posts SET author = %s WHERE author = %s """,(form.username.data,session.get('user')))
+                    mycur.execute(""" SET FOREIGN_KEY_CHECKS =1 """ )
+                    db.commit()
+                    session['user']=form.username.data
+                if form.dp.data:
+                    mycur.execute(f""" SELECT image_file FROM reg WHERE user= %s """,(session.get('user'),))
+                    image_file=mycur.fetchone()[0]
+                    file_path=os.path.join(app.root_path,'static\profile_pics',image_file)
+                    os.remove(file_path)
+                    picture=save(form.dp.data)
+                    mycur.execute(""" UPDATE reg SET image_file = %s where user = %s """,(picture,session.get('user')))
+                    db.commit()
+                flash('changed Successfully','success')
             else:
                 flash("Account with that email already exists!",'danger')
         else:
             flash("Username taken,try a diffrent one",'danger')
             
-    mycur.execute(f""" SELECT email FROM reg WHERE user= %s """,(session.get('user'),))
-    email=mycur.fetchone()[0]
-    return render_template('account.htm',email=email,form=form,current_add='account')
+    mycur.execute(f""" SELECT email,image_file FROM reg WHERE user= %s """,(session.get('user'),))
+    email,image_file=mycur.fetchone()
+    profile_pic=url_for('static',filename='profile_pics/'+image_file)
+    return render_template('account.htm',email=email,form=form,current_add='account',dp=profile_pic)
+
+def save(photo):
+    _,file_ext=os.path.splitext(photo.filename)
+    random=secrets.token_hex(8)
+    file_nm=random+file_ext
+    file_path=os.path.join(app.root_path,'static\profile_pics',file_nm)
+    photo.save(file_path)
+    return file_nm
+
      
 
 if __name__=='__main__':

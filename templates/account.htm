@@ -3,7 +3,7 @@
 
 <div class="content-section">
   <div class="media">
-    <img class="rounded-circle account-img" src="{{url_for('static',filename='profile_pics/'+'default.jpg')}}">
+    <img class="rounded-circle account-img" src="{{dp}}">
     <div class="media-body">
       <h2 class="account-heading">{{session.get('user')}}</h2>
       <p class="text-secondary">{{email}}</p>
@@ -12,7 +12,7 @@
   <!-- FORM HERE -->
 
   <div class="content-section">
-    <form action="/account" method="POST">
+    <form action="/account" method="POST" enctype="multipart/form-data">
       {{ form.hidden_tag() }}
 
 
@@ -55,8 +55,30 @@
 
       </div>
 
+
+
+      <div class="input-group mb-3">
+        {{ form.dp.label(class="custom-file-label") }}
+
+
+        {% if form.dp.errors %}
+        {{ form.dp(class="custom-file-input is-invalid")}}
+        <div class="invalid-feedback">
+          {% for error in form.dp.errors %}
+          <span> {{ error }} </span>
+          {% endfor %}
+        </div>
+        {% else %}
+        {{ form.dp(class="custom-file-input") }}
+        {% endif %}
+
+
+      </div>
+
+
+
       <div class="form-group">
-        {{ form.submit(class="btn btn-outline-info ") }}
+        {{ form.submit(class="btn btn-outline-success ") }}
       </div>
     </form>
   </div>
