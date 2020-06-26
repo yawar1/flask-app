@@ -2,12 +2,12 @@
 {%block content%}
 
 <div class="content-section">
-    <form action="/write" method="POST">
+    <form action="/post/update/{{postid}}" method="POST">
         {{ form.hidden_tag() }}
 
 
         <fieldset class="form-group">
-            <legend class="border-bottom mb-4">write</legend>
+            <legend class="border-bottom mb-4">Update</legend>
 
             <div class="form-group">
                 {{ form.title.label(class="form-control-label") }}

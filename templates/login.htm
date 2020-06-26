@@ -15,14 +15,14 @@
 
 
                 {% if form.username.errors %}
-                        {{ form.username(class="form-control-lg is-invalid")}}
+                        {{ form.username(class="form-control-lg is-invalid",AUTOFOCUS="ON",AUTOCOMPLETE="OFF")}}
                         <div class="invalid-feedback">
                             {% for error in form.username.errors %}
                                 <span> {{ error }} </span>
                                 {% endfor %}
                         </div> 
                         {% else %}
-                            {{ form.username(class="form-control form-control-lg") }}
+                            {{ form.username(class="form-control form-control-lg",AUTOFOCUS="ON",AUTOCOMPLETE="OFF") }}
                     {% endif %}
 
 

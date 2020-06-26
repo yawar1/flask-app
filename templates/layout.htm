@@ -9,7 +9,7 @@
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
         integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
-        <link rel="stylesheet" type="text/css" href="{{url_for('static',filename='main.css')}}">
+    <link rel="stylesheet" type="text/css" href="{{url_for('static',filename='main.css')}}">
     {%if title%}
     <title>Yawar-{{title}}</title>
     {%else%}
@@ -52,16 +52,16 @@
         </nav>
     </header>
     <main role="main" class="container">
-        <div class="row"> 
+        <div class="row">
             <div class="col-md-8">
                 {% with messages = get_flashed_messages(with_categories=True) %}
-                    {% if messages %}
-                        {% for category,messages in messages %}
-                            <div class="alert alert-{{ category }}">
-                                {{ messages }} <a href="/{{current_add}}">  CLOSE  </a>
-                            </div>  
-                            {% endfor %}
-                    {% endif %}
+                {% if messages %}
+                {% for category,messages in messages %}
+                <div class="alert alert-{{ category }}">
+                    {{ messages }} <a href="{{current_address}}"> CLOSE </a>
+                </div>
+                {% endfor %}
+                {% endif %}
                 {% endwith %}
                 {% block content %}{% endblock %}
             </div>
@@ -69,12 +69,12 @@
                 <div class="content-section">
                     <h3>Sidebar</h3>
                     <p class='text-muted'>This is a test project.
-                        <ul class="list-group">
-                            <li class="list-group-item list-group-item-light">Latest Posts</li>
-                            <li class="list-group-item list-group-item-light">Announcements</li>
-                            <li class="list-group-item list-group-item-light">Calendars</li>
-                            <li class="list-group-item list-group-item-light">etc</li>
-                        </ul>
+                    <ul class="list-group">
+                        <li class="list-group-item list-group-item-light">Latest Posts</li>
+                        <li class="list-group-item list-group-item-light">Announcements</li>
+                        <li class="list-group-item list-group-item-light">Calendars</li>
+                        <li class="list-group-item list-group-item-light">etc</li>
+                    </ul>
                     </p>
                 </div>
             </div>

@@ -24,6 +24,11 @@ class PostForm(FlaskForm):
 class UpdateForm(FlaskForm):
     username=StringField('Change Username',validators=[Length(min=3,max=20)])
     email=StringField('Change Email',validators=[Email()])
-    dp=FileField('Change Profile Pic',validators=[FileRequired(),FileAllowed(['jpg','png'])])
+    dp=FileField('Change Profile Pic',validators=[FileAllowed(['jpg','png'])])
     submit=SubmitField('Change')
+class UpdatePost(FlaskForm):
+    title = StringField('New title', validators=[DataRequired(),Length(max=30)])
+    Text= TextAreaField('EDIT POST', render_kw={"rows": 10, "cols": 10},validators=[DataRequired()])
+    submit=SubmitField('Update')
+
 
