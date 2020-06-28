@@ -20,20 +20,27 @@ app=Flask(__name__)
 app.config['SECRET_KEY']='27850d1f47f1aef5a288f142'
 crypt=Bcrypt(app)
 
-
+@app.route('/home/<int:offset>')
 @app.route('/home')
-def home():
+def home(offset=0):
     if not(session.get('user')):
         return redirect(url_for('login'))
-    mycur.execute(""" SELECT title,content,author,date_,id FROM posts  ORDER BY date_ DESC """)
+    mycur.execute(""" SELECT COUNT(id) FROM posts  """)
+    result=mycur.fetchone()
+    if offset>result[0]:
+        return redirect(url_for('home'))
+    mycur.execute(""" SELECT title,content,author,date_,id FROM posts ORDER BY date_ DESC  LIMIT %s,2  """,(offset,))
     posts=mycur.fetchall()
+   
     j=0
     for i in posts:
         mycur.execute(""" SELECT image_file FROM reg WHERE user = %s """,(i[2],))
         image=mycur.fetchone()
         posts[j]+=(image[0],)
         j+=1
-    return render_template("home.htm",title="home",posts=posts,current_address='/home') 
+    next=offset+2
+    prev=offset-2
+    return render_template("home.htm",title="home",posts=posts,current_address='/home',next=next,prev=prev,end_=result[0]-1) 
 
 @app.route('/write',methods=['GET','POST'])
 def write():
