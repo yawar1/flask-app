@@ -2,31 +2,34 @@
 {% block content%}
 {% for post in posts %}
 <article class="media content-section">
-  <div class="media-body">
-    <div class="article-metadata">
-      <img src="{{url_for('static',filename='profile_pics/' + post[5])}}" class=" account-img">
-      <a class="mr-2" href="#">{{ post[2] }}</a>
-      <small class="text-muted">{{ post[3] }}</small>
-    </div>
-    <h2><a class="article-title" href="/post/{{post[4]}}">{{post[0]}}</a></h2>
-    <p class="article-content">{{ post[1]}}</p>
-  </div>
+	<div class="media-body">
+		<div class="article-metadata">
+			<img src="{{url_for('static',filename='profile_pics/' + post[5])}}" class=" account-img">
+			<a class="mr-2" href="#">{{ post[2] }}</a>
+			<small class="text-muted">{{ post[3] }}</small>
+		</div>
+		<h2><a class="article-title" href="/post/{{post[4]}}">{{post[0]}}</a></h2>
+		<p class="article-content">{{ post[1]}}</p>
+	</div>
 </article>
 {% endfor %}
 <nav aria-label="Page navigation example">
-  <ul class="pagination">
-    {% if prev == -2 %}
-    <li class="page-item"><a class="page-link disabled" href="#" ></a>Previous</a></li>
-    {% else %}
-    <li class="page-item"><a class="page-link" href="/home/{{ prev }}">Previous</a></li>
-    {% endif %}
-    <li class="page-item"><a class="page-link" href="/home/{{2}}">1</a></li>
-    <li class="page-item"><a class="page-link" href="/home/{{4}}">2</a></li>
-    {% if next > end_ %}
-    <li class="page-item"><a class="page-link disabled"></a>Next</a></li>
-    {% else %}
-    <li class="page-item"><a class="page-link" href="/home/{{ next }}">Next</a></li>
-    {% endif %}
-  </ul>
+	<ul class="pagination">
+		{% if prev == -2 %}
+		<li class="page-item"><a class="page-link disabled" href="#"><button type="button"
+					class="btn btn-outline-success">PREVIOUS</button></a></li>
+		{% else %}
+		<li class="page-item"><a class="page-link" href="/home/{{ prev }}"><button type="button"
+					class="btn btn-outline-success">PREVIOUS</button></a></li>
+		{% endif %}
+
+		{% if next > end_ %}
+		<li class="page-item"><a class="page-link disabled"><button type="button"
+					class="btn btn-outline-success">NEXT</button></a></li>
+		{% else %}
+		<li class="page-item"><a class="page-link" href="/home/{{ next }}"><button type="button"
+					class="btn btn-outline-success">NEXT</button></a></li>
+		{% endif %}
+	</ul>
 </nav>
 {%endblock%}
