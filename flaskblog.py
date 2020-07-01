@@ -11,13 +11,13 @@ import os
 db=sq.connect(
     host="localhost",
     user="root",
-    passwd="Nasapass@yahoopee5216",
+    passwd="",
     database="flask"
 )
 mycur=db.cursor()
 
 app=Flask(__name__)
-app.config['SECRET_KEY']='27850d1f47f1aef5a288f142'
+app.config['SECRET_KEY']=''
 crypt=Bcrypt(app)
 
 @app.route('/home/<int:offset>')
