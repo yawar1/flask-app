@@ -11,7 +11,7 @@ import os
 db=sq.connect(
     host="localhost",
     user="root",
-    passwd="Nasamud@yahoopee5216",
+    passwd="Nasapass@yahoopee5216",
     database="flask"
 )
 mycur=db.cursor()
